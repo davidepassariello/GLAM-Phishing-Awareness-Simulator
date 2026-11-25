@@ -10,25 +10,25 @@ Research prototype for a master's thesis in Digital Humanities: phishing awarene
 - `docs/ARCHITECTURE.md`: data flow and limitations
 - `package.json`, `pnpm-lock.yaml`: frontend dependencies
 
+
 ## Requirements
 
 - Node.js version compatible with Vite 8 (Node >=20.19 or >=22.12).
-- `npm` (or pnpm, according to the lockfile).
+- npm (with package-lock.json for reproducible dependency installation).
 - A **new, independent** Supabase project for testing; do not use the thesis pilot's production project.
-- Supabase CLI for deploying the SQL migration and Edge Function (see official docs below).
-- Optional: Anthropic API key + supported Anthropic model ID for live dialogue. Without these, `/dialogo` will report a configuration error; other simulation functions may still operate when Supabase is configured.
+- Supabase CLI for deploying the SQL migration and Edge Function.
+- Optional: Anthropic API key and supported model ID for AI-generated dialogue. Without these, the conversational feature is unavailable, while the email simulation and event logging can still operate.
 
 ## 1. Prepare the frontend
 
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
 
-On Windows PowerShell replace `cp` with `Copy-Item .env.example .env.local`. Fill `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local` with values from the **test** Supabase project. Never add service-role or Anthropic keys to `VITE_` variables. The terminal prints the local address for the frontend.
+On Windows PowerShell, replace `cp` with `Copy-Item .env.example .env.local`. Fill `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local` with values from the **test** Supabase project. Never add service-role or Anthropic keys to `VITE_` variables. The terminal prints the local address for the frontend.
 
-> `npm install` may re-resolve dependencies. For a lockfile-exact installation install pnpm and run `pnpm install --frozen-lockfile`; use `pnpm dev`.
 
 ## 2. Configure a new Supabase project
 
