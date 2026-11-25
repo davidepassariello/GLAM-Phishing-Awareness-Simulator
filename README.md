@@ -35,7 +35,7 @@ On Windows PowerShell replace `cp` with `Copy-Item .env.example .env.local`. Fil
 1. Create a fresh Supabase project. The original pilot database is not needed and must not be modified.
 2. Open its **SQL Editor** and execute the SQL in `supabase/migrations/20260112000100_glam_dialogue.sql`. This creates the two tables and the `prenota_conversazione` / `inserisci_interazioni` RPC functions. Execute only on the empty test project. Alternatively, use the Supabase CLI migrations workflow.
 3. Install the Supabase CLI following the official guide. From the project directory, run `supabase login`, then `supabase link --project-ref YOUR_NEW_PROJECT_REF`.
-4. Set the Edge Function secrets from the Supabase Dashboard **Edge Functions → Secrets**: `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL`. Do not store the secret values in the repository. Supabase provides `SUPABASE_URL` and the service role key as built-in environment variables; confirm their availability in your own project.
+4. **Optional — Enable AI-generated dialogue:** To use the conversational feature, obtain your own valid Anthropic API key. In the Supabase Dashboard, open **Edge Functions → Secrets** and configure `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` with a supported model identifier. API credentials are not provided in this repository. Anthropic API usage may incur costs. Without these settings, the AI dialogue feature will not work, but the email simulation and event logging can still be used. Never store private API keys in the repository.
 5. Deploy with `supabase functions deploy make-server-014813ea`. The Edge Function uses `supabase/functions/server/index.tsx` as entrypoint, which imports the Hono app in `app.ts`.
 6. Copy your test project's URL and public `anon` key into `.env.local`. Run the frontend.
 
@@ -44,7 +44,7 @@ Paths, relative to the Edge Function URL:
 - `POST /eventi` → user event batches
 - `POST /dialogo` → AI chat requests
 
-**Important:** Depending on your Supabase CLI version, Edge Function entrypoint metadata and secret management options may differ; consult the official deployment guide. Do not disable JWT verification just to make the demo work. The frontend sends the public anon token.
+**Authentication configuration:** The Supabase Edge Function is configured with `verify_jwt = false` to support anonymous participation in the research simulation. This setting is defined in `supabase/config.toml`.
 
 ## 3. Build
 
