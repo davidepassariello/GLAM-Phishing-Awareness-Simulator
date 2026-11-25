@@ -1,5 +1,5 @@
 project_id = "glam-phishing-awareness-simulator"
 
 [functions.make-server-014813ea]
-verify_jwt = true
+verify_jwt = false
 entrypoint = "./functions/server/index.tsx"
