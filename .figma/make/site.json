@@ -1,0 +1,15 @@
+{
+  "title": "Posta - Marco Conti",
+  "description": "Simulazione interattiva di gestione della posta elettronica in un archivio storico, sviluppata nell'ambito di un progetto universitario di ricerca sulla cybersecurity awareness.",
+  "language": "it",
+  "robots": {
+    "index": false
+  },
+  "icons": {
+    "icon": "/.figma/make/favicon.png"
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
