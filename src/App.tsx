@@ -1234,17 +1234,18 @@ export default function App() {
         );
         group.forEach((event) => pendingEvents.current.delete(event.id));
       }
-      completed = true;
-    } catch {
-      // Gli eventi restano in coda e verranno ritentati alla prossima azione.
-    } finally {
+      completed = true;    
+} catch (error) {
+  console.error("Errore invio eventi a Supabase:", error);
+  // Gli eventi restano in coda e verranno ritentati alla prossima azione.
+}
+ finally {
       flushingEvents.current = false;
       if (completed && pendingEvents.current.size > 0) {
         void flushPendingEvents();
       }
     }
   }
-
   function logAction(
     type: ActionType,
     mail: Mail | null,

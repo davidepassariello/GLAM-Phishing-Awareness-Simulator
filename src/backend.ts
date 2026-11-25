@@ -77,7 +77,7 @@ export function sendEvents(
   attempt: number,
   events: PersistedEvent[],
 ) {
-  return callBackend<{ inseriti: number conflitti: number }>("/eventi", {
+  return callBackend<{ inseriti: number; conflitti: number }>("/eventi", {
     id_sessione: sessionId,
     numero_tentativo: attempt,
     eventi: events,
