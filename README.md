@@ -1,73 +1,191 @@
 # GLAM Phishing Awareness Simulator
 
-Research prototype for a master's thesis in Digital Humanities: phishing awareness in the GLAM sector using gamified Scenario-Based Learning. The project simulates an email client, logs decisions, and optionally generates character dialogue using the Anthropic API.
+Research prototype developed for a master's thesis in Digital Humanities, focusing on cybersecurity awareness in the GLAM sector (Galleries, Libraries, Archives and Museums) through gamified Scenario-Based Learning.
+
+The application simulates an email client, allows users to identify and manage phishing attempts, records their decisions, and supports optional AI-generated conversations with simulated characters through the Anthropic API.
 
 ## Contents
 
-- `src/`, `public/`: React + TypeScript frontend, assets and local scoring logic
-- `supabase/functions/server/`: Supabase Edge Function (Deno + Hono)
-- `supabase/migrations/`: PostgreSQL tables, indexes and RPC functions
-- `docs/ARCHITECTURE.md`: data flow and limitations
-- `package.json`, `pnpm-lock.yaml`: frontend dependencies
-
+- `src/`, `public/`: React and TypeScript frontend, assets and local scoring logic.
+- `supabase/functions/server/`: Supabase Edge Function developed with Deno, Hono and TypeScript.
+- `supabase/migrations/`: PostgreSQL tables, indexes and RPC functions.
+- `docs/ARCHITECTURE.md`: system architecture, data flow and limitations.
+- `package.json`, `package-lock.json`: frontend dependencies and reproducible installation.
 
 ## Requirements
 
-- Node.js version compatible with Vite 8 (Node >=20.19 or >=22.12).
-- npm (with package-lock.json for reproducible dependency installation).
-- A **new, independent** Supabase project for testing; do not use the thesis pilot's production project.
-- Supabase CLI for deploying the SQL migration and Edge Function.
-- Optional: Anthropic API key and supported model ID for AI-generated dialogue. Without these, the conversational feature is unavailable, while the email simulation and event logging can still operate.
+- Node.js compatible with Vite 8 (Node.js >=20.19 or >=22.12).
+- npm.
+- A free Supabase account and a new, independent project.
+- Supabase CLI, which can be executed through `npx`.
+- Optional: a valid Anthropic API key and supported model identifier for AI-generated dialogue.
 
-## 1. Prepare the frontend
+## 1. Download and install
+
+Clone the repository or download it as a ZIP file and extract it.
+
+Open a terminal in the project's root directory and install the dependencies:
 
 ```bash
 npm ci
+```
+
+Create a `.env.local` file from the provided `.env.example` template.
+
+On Windows Command Prompt:
+
+```cmd
+copy .env.example .env.local
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+On macOS or Linux:
+
+```bash
 cp .env.example .env.local
+```
+
+The environment variables will be configured after creating the Supabase project.
+
+## 2. Configure Supabase
+
+1. Sign in to [Supabase](https://supabase.com/) and create a new project. The original thesis database is not required.
+2. Open **SQL Editor** in the new project.
+3. Execute the SQL script located at:
+
+   `supabase/migrations/20260112000100_glam_dialogue.sql`
+
+   This creates the PostgreSQL tables `interazioni_utente` and `conversazioni`, along with indexes and RPC functions such as `inserisci_interazioni` and `prenota_conversazione`.
+
+4. From the local project directory, authenticate with Supabase:
+
+   ```bash
+   npx supabase login
+   ```
+
+5. Link the local project to your new Supabase project:
+
+   ```bash
+   npx supabase link --project-ref YOUR_PROJECT_REF
+   ```
+
+   Replace `YOUR_PROJECT_REF` with the Project ID available in the Supabase Dashboard.
+
+6. Deploy the Edge Function:
+
+   ```bash
+   npx supabase functions deploy make-server-014813ea
+   ```
+
+The Edge Function uses `supabase/functions/server/index.tsx` as its entrypoint and imports the Hono application defined in `app.ts`.
+
+**Authentication configuration:** The Edge Function uses `verify_jwt = false` to support anonymous participation in the research simulation, as specified in `supabase/config.toml`. Public deployments require appropriate safeguards against unauthorized use.
+
+## 3. Configure the frontend
+
+Open `.env.local` and insert the URL and publishable key of your new Supabase project:
+
+```dotenv
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_PUBLISHABLE_KEY
+```
+
+Both values are available in the Supabase Dashboard.
+
+Never insert private Anthropic API keys, Supabase secret keys or service-role credentials into frontend environment variables.
+
+The `.env.local` file is excluded from Git version control.
+
+## 4. Run the simulator
+
+Start the frontend development server:
+
+```bash
 npm run dev
 ```
 
-On Windows PowerShell, replace `cp` with `Copy-Item .env.example .env.local`. Fill `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local` with values from the **test** Supabase project. Never add service-role or Anthropic keys to `VITE_` variables. The terminal prints the local address for the frontend.
+Open the local URL displayed in the terminal, typically:
 
+`http://localhost:8443/`
 
-## 2. Configure a new Supabase project
+The simulator can now be used to navigate the simulated email client and perform actions.
 
-1. Create a fresh Supabase project. The original pilot database is not needed and must not be modified.
-2. Open its **SQL Editor** and execute the SQL in `supabase/migrations/20260112000100_glam_dialogue.sql`. This creates the two tables and the `prenota_conversazione` / `inserisci_interazioni` RPC functions. Execute only on the empty test project. Alternatively, use the Supabase CLI migrations workflow.
-3. Install the Supabase CLI following the official guide. From the project directory, run `supabase login`, then `supabase link --project-ref YOUR_NEW_PROJECT_REF`.
-4. **Optional — Enable AI-generated dialogue:** To use the conversational feature, obtain your own valid Anthropic API key. In the Supabase Dashboard, open **Edge Functions → Secrets** and configure `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` with a supported model identifier. API credentials are not provided in this repository. Anthropic API usage may incur costs. Without these settings, the AI dialogue feature will not work, but the email simulation and event logging can still be used. Never store private API keys in the repository.
-5. Deploy with `supabase functions deploy make-server-014813ea`. The Edge Function uses `supabase/functions/server/index.tsx` as entrypoint, which imports the Hono app in `app.ts`.
-6. Copy your test project's URL and public `anon` key into `.env.local`. Run the frontend.
+When correctly configured, these events are transmitted to the Supabase Edge Function and stored in the PostgreSQL database.
 
-Paths, relative to the Edge Function URL:
-- `GET /health` → service check
-- `POST /eventi` → user event batches
-- `POST /dialogo` → AI chat requests
+To verify event logging, open **Supabase Dashboard → Table Editor → interazioni_utente** and check whether new records appear after interacting with the simulator.
 
-**Authentication configuration:** The Supabase Edge Function is configured with `verify_jwt = false` to support anonymous participation in the research simulation. This setting is defined in `supabase/config.toml`.
+## 5. Optional: enable AI-generated dialogue
 
-## 3. Build
+The simulator integrates the Anthropic API to generate contextual responses from simulated characters.
+
+**API credentials are not included in this repository.**
+
+To enable this feature:
+
+1. Obtain your own valid Anthropic API key.
+2. Open **Supabase Dashboard → Edge Functions → Secrets**.
+3. Configure the following environment variables:
+   - `ANTHROPIC_API_KEY`: your personal Anthropic API key.
+   - `ANTHROPIC_MODEL`: a supported model identifier compatible with the application.
+4. Ensure your Anthropic account has the necessary API permissions and credits.
+
+Anthropic API usage may incur costs.
+
+Without these credentials, the email simulation, local scoring and event logging remain available, but live AI-generated dialogue cannot be used.
+
+## 6. Backend endpoints
+
+The Supabase Edge Function exposes the following HTTP endpoints:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/health` | Check service availability |
+| POST | `/eventi` | Receive and record user events |
+| POST | `/dialogo` | Manage AI-generated conversations |
+
+These paths are relative to the deployed Edge Function URL.
+
+## 7. Build
+
+To compile the frontend for distribution:
 
 ```bash
 npm run build
 ```
 
-Vite produces static output in `dist/` (gitignored).
+Vite generates the compiled files in the `dist/` directory, which is excluded from Git version control.
 
-## Reproducibility notes
+## Reproducibility and limitations
 
-- The migration contains only schema and stored procedures; it does not include the pilot's participant records.
-- Real dialogue requires a **separate valid Anthropic key**, a working model ID, and API usage permissions. Outputs may vary between runs even with the same inputs.
-- Local UI, scoring, historical screenshots and server-side responses are distinct concerns. Reproduction is not a guarantee of identical LLM output.
-- This is a cleaned export of a Figma Make research prototype. It has not yet been validated end to end on a fresh Supabase account; complete the smoke test before claiming turnkey reproducibility.
-- This repository must not contain participant logs, `.env.local`, Anthropic keys, service-role keys, or private credentials.
+The project has been exported from Figma Make and configured for independent execution.
+
+The following components have been successfully verified in a separate testing environment:
+
+- Frontend dependency installation using `npm ci`.
+- Local React application execution using Vite.
+- Production build using `npm run build`.
+- PostgreSQL schema creation in a new Supabase project.
+- Supabase Edge Function deployment and `/health` endpoint response.
+- HTTP communication between the frontend and backend.
+- User event persistence in the `interazioni_utente` table.
+
+The complete AI conversation flow has not been independently tested in the new environment, since it requires a valid personal Anthropic API key.
+
+Generated dialogue may vary between executions because of the probabilistic nature of language models and possible changes to the external service.
+
+The repository contains source code and database structure, but does not include participant records from the thesis pilot study, private credentials or the original Supabase database.
 
 ## References
 
 - [Supabase Edge Functions deployment](https://supabase.com/docs/guides/functions/deploy)
 - [Supabase database migrations](https://supabase.com/docs/guides/local-development/database-migrations)
-- [Supabase secrets](https://supabase.com/docs/guides/functions/secrets)
+- [Supabase Edge Function secrets](https://supabase.com/docs/guides/functions/secrets)
 
 ## Academic context
 
-Developed for an academic prototype addressing cybersecurity awareness for Galleries, Libraries, Archives and Museums.
+Developed as part of a master's thesis in Digital Humanities on cybersecurity awareness in the GLAM sector, using a gamified Scenario-Based Learning approach to simulate phishing-related decision-making.
